@@ -1,0 +1,17 @@
+[
+  { "id": 1, "nop": "12.19.004.001.001-0001", "nama": "Ahmad Fauzi", "nik": "1219040101010001", "alamat": "Jl. Merdeka No. 10, Lima Puluh", "kecamatan": "Lima Puluh", "nilai_pbb": 450000, "status": "lunas", "tahun": 2025 },
+  { "id": 2, "nop": "12.19.004.001.001-0002", "nama": "Siti Rahmawati", "nik": "1219045202010001", "alamat": "Jl. Sudirman No. 25, Lima Puluh", "kecamatan": "Lima Puluh", "nilai_pbb": 320000, "status": "belum", "tahun": 2025 },
+  { "id": 3, "nop": "12.19.004.001.001-0003", "nama": "Budi Santoso", "nik": "1219040303010001", "alamat": "Jl. Diponegoro No. 15, Lima Puluh", "kecamatan": "Lima Puluh", "nilai_pbb": 750000, "status": "lunas", "tahun": 2025 },
+  { "id": 4, "nop": "12.19.007.002.001-0001", "nama": "Rudi Hartono", "nik": "1219070404010001", "alamat": "Jl. Pahlawan No. 8, Medang Deras", "kecamatan": "Medang Deras", "nilai_pbb": 580000, "status": "kurang", "tahun": 2025 },
+  { "id": 5, "nop": "12.19.007.002.001-0002", "nama": "Dewi Sartika", "nik": "1219074505010001", "alamat": "Jl. Ahmad Yani No. 30, Medang Deras", "kecamatan": "Medang Deras", "nilai_pbb": 410000, "status": "belum", "tahun": 2025 },
+  { "id": 6, "nop": "12.19.006.001.001-0001", "nama": "Hendra Gunawan", "nik": "1219065606010001", "alamat": "Jl. Sei Suka No. 5, Sei Suka", "kecamatan": "Sei Suka", "nilai_pbb": 520000, "status": "lunas", "tahun": 2025 },
+  { "id": 7, "nop": "12.19.003.001.001-0001", "nama": "Fitriani Lubis", "nik": "1219034707010001", "alamat": "Jl. Talawi No. 12, Talawi", "kecamatan": "Talawi", "nilai_pbb": 380000, "status": "lunas", "tahun": 2025 },
+  { "id": 8, "nop": "12.19.005.001.001-0001", "nama": "Supriyanto", "nik": "1219050808010001", "alamat": "Jl. Air Putih No. 20, Air Putih", "kecamatan": "Air Putih", "nilai_pbb": 680000, "status": "belum", "tahun": 2025 },
+  { "id": 9, "nop": "12.19.002.001.001-0001", "nama": "Ratna Sari Dewi", "nik": "1219024909010001", "alamat": "Jl. Tanjung Tiram No. 33, Tanjung Tiram", "kecamatan": "Tanjung Tiram", "nilai_pbb": 440000, "status": "kurang", "tahun": 2025 },
+  { "id": 10, "nop": "12.19.007.003.001-0001", "nama": "Andi Pratama", "nik": "1219071010010001", "alamat": "Jl. Besar No. 45, Medang Deras", "kecamatan": "Medang Deras", "nilai_pbb": 820000, "status": "lunas", "tahun": 2025 },
+  { "id": 11, "nop": "12.19.004.002.001-0001", "nama": "Mulyono", "nik": "1219041111010001", "alamat": "Jl. Kenanga No. 7, Lima Puluh", "kecamatan": "Lima Puluh", "nilai_pbb": 290000, "status": "belum", "tahun": 2025 },
+  { "id": 12, "nop": "12.19.001.001.001-0001", "nama": "Nurhayati", "nik": "1219015212010001", "alamat": "Jl. Sei Balai No. 18, Sei Balai", "kecamatan": "Sei Balai", "nilai_pbb": 500000, "status": "lunas", "tahun": 2025 },
+  { "id": 13, "nop": "12.19.007.004.001-0001", "nama": "Agus Salim", "nik": "1219071301010001", "alamat": "Jl. Pelabuhan No. 3, Medang Deras", "kecamatan": "Medang Deras", "nilai_pbb": 610000, "status": "kurang", "tahun": 2025 },
+  { "id": 14, "nop": "12.19.004.003.001-0001", "nama": "Lestari Wulandari", "nik": "1219045414010001", "alamat": "Jl. Mawar No. 12, Lima Puluh", "kecamatan": "Lima Puluh", "nilai_pbb": 350000, "status": "lunas", "tahun": 2025 },
+  { "id": 15, "nop": "12.19.006.002.001-0001", "nama": "Hadi Pranoto", "nik": "1219061505010001", "alamat": "Jl. Cempaka No. 22, Sei Suka", "kecamatan": "Sei Suka", "nilai_pbb": 560000, "status": "belum", "tahun": 2025 }
+]
