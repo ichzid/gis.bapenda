@@ -3,9 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
-import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
 import { GridIcon, MapPinIcon, PieChartIcon, TableIcon } from "@/icons";
 
@@ -16,22 +15,76 @@ const menuItems = [
   { name: "Laporan", path: "/pbb/laporan", icon: <PieChartIcon className="size-5" /> },
 ];
 
+interface Village {
+  village: string;
+  village_code: string;
+  district: string;
+  district_code: string;
+}
+
 export default function TopNav() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [applicationMenuOpen, setApplicationMenuOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [geojsonFeatures, setGeojsonFeatures] = useState<GeoJSON.Feature[]>([]);
+  const [filterDistrict, setFilterDistrict] = useState("");
+  const [filterVillage, setFilterVillage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Keyboard shortcut Cmd/Ctrl+K untuk fokus search
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
-        inputRef.current?.focus();
+        searchInputRef.current?.focus();
       }
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Load geojson sekali
+  useEffect(() => {
+    import("@/data/geojson/batubara.json").then((data) => {
+      const d = data.default as { features: GeoJSON.Feature[] };
+      setGeojsonFeatures(d.features || []);
+    });
+  }, []);
+
+  const { districts, villagesByDistrict } = useMemo(() => {
+    const districtSet = new Set<string>();
+    const map = new Map<string, Village[]>();
+
+    geojsonFeatures.forEach((f) => {
+      const props = f.properties as Record<string, string>;
+      const district = props.district || "";
+      const village = props.village || "";
+      const district_code = props.district_code || "";
+      const village_code = props.village_code || "";
+
+      districtSet.add(district);
+      if (!map.has(district)) map.set(district, []);
+      const list = map.get(district)!;
+      if (!list.find((v) => v.village_code === village_code)) {
+        list.push({ district, village, district_code, village_code });
+      }
+    });
+
+    return {
+      districts: [...districtSet].sort(),
+      villagesByDistrict: map,
+    };
+  }, [geojsonFeatures]);
+
+  const filteredVillages = filterDistrict ? villagesByDistrict.get(filterDistrict) || [] : [];
+
+  // Reset village when district changes
+  const handleDistrictChange = (val: string) => {
+    setFilterDistrict(val);
+    if (!val) setFilterVillage("");
+  };
 
   const isActive = (path: string) => {
     if (path === "/pbb") return pathname === "/pbb";
@@ -76,27 +129,25 @@ export default function TopNav() {
           </nav>
 
           {/* Desktop: Search + Actions */}
-          <div className="hidden lg:flex items-center gap-3 shrink-0">
-            {/* Search */}
-            <form>
-              <div className="relative">
-                <span className="absolute -translate-y-1/2 left-4 top-1/2 pointer-events-none">
-                  <svg className="fill-gray-500 dark:fill-gray-400" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path fillRule="evenodd" clipRule="evenodd" d="M3.04175 9.37363C3.04175 5.87693 5.87711 3.04199 9.37508 3.04199C12.8731 3.04199 15.7084 5.87693 15.7084 9.37363C15.7084 12.8703 12.8731 15.7053 9.37508 15.7053C5.87711 15.7053 3.04175 12.8703 3.04175 9.37363ZM9.37508 1.54199C5.04902 1.54199 1.54175 5.04817 1.54175 9.37363C1.54175 13.6991 5.04902 17.2053 9.37508 17.2053C11.2674 17.2053 13.003 16.5344 14.357 15.4176L17.177 18.238C17.4699 18.5309 17.9448 18.5309 18.2377 18.238C18.5306 17.9451 18.5306 17.4703 18.2377 17.1774L15.418 14.3573C16.5365 13.0033 17.2084 11.2669 17.2084 9.37363C17.2084 5.04817 13.7011 1.54199 9.37508 1.54199Z" />
-                  </svg>
-                </span>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Cari..."
-                  className="dark:bg-dark-900 h-11 w-[240px] rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
-                />
-              </div>
-            </form>
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            {/* Search — NOP */}
+            <div className="relative">
+              <span className="absolute -translate-y-1/2 left-3 top-1/2 pointer-events-none">
+                <svg className="fill-gray-400 dark:fill-gray-500" width="16" height="16" viewBox="0 0 20 20" fill="none">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M3.04175 9.37363C3.04175 5.87693 5.87711 3.04199 9.37508 3.04199C12.8731 3.04199 15.7084 5.87693 15.7084 9.37363C15.7084 12.8703 12.8731 15.7053 9.37508 15.7053C5.87711 15.7053 3.04175 12.8703 3.04175 9.37363ZM9.37508 1.54199C5.04902 1.54199 1.54175 5.04817 1.54175 9.37363C1.54175 13.6991 5.04902 17.2053 9.37508 17.2053C11.2674 17.2053 13.003 16.5344 14.357 15.4176L17.177 18.238C17.4699 18.5309 17.9448 18.5309 18.2377 18.238C18.5306 17.9451 18.5306 17.4703 18.2377 17.1774L15.418 14.3573C16.5365 13.0033 17.2084 11.2669 17.2084 9.37363C17.2084 5.04817 13.7011 1.54199 9.37508 1.54199Z" />
+                </svg>
+              </span>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari NOP..."
+                className="h-9 w-[200px] rounded-lg border border-gray-200 bg-white pl-9 pr-3 text-xs text-gray-700 shadow-sm placeholder:text-gray-400 focus:border-brand-300 focus:outline-none dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300"
+              />
+            </div>
 
-            {/* Theme Toggle + Notifications + User */}
             <ThemeToggleButton />
-            <NotificationDropdown />
             <UserDropdown />
           </div>
 
@@ -126,11 +177,8 @@ export default function TopNav() {
           </div>
         </div>
 
-        {/* Mobile: Dots menu dropdown (notif + user) */}
-        <div className={`${applicationMenuOpen ? "flex" : "hidden"} items-center justify-between w-full gap-4 px-5 py-4 lg:hidden shadow-theme-md`}>
-          <div className="flex items-center gap-2">
-            <NotificationDropdown />
-          </div>
+        {/* Mobile: Dots menu dropdown (user) */}
+        <div className={`${applicationMenuOpen ? "flex" : "hidden"} items-center justify-end w-full gap-4 px-5 py-4 lg:hidden shadow-theme-md`}>
           <UserDropdown />
         </div>
 

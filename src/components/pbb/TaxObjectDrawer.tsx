@@ -16,6 +16,7 @@ interface TaxObject {
   luas_bangunan: number;
   nilai_pbb: number;
   status: string;
+  boundary?: { lat: number; lng: number }[];
 }
 
 interface TaxObjectDrawerProps {
