@@ -6,13 +6,54 @@ import { usePathname } from "next/navigation";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import UserDropdown from "@/components/header/UserDropdown";
-import { GridIcon, MapPinIcon, PieChartIcon, TableIcon } from "@/icons";
 
 const menuItems = [
-  { name: "Dashboard", path: "/pbb", icon: <GridIcon className="size-5" /> },
-  { name: "Peta PBB", path: "/pbb/peta-pbb", icon: <MapPinIcon className="size-5" /> },
-  { name: "Daftar WP", path: "/pbb/daftar-wajib-pajak", icon: <TableIcon className="size-5" /> },
-  { name: "Laporan", path: "/pbb/laporan", icon: <PieChartIcon className="size-5" /> },
+  {
+    name: "Dashboard",
+    path: "/pbb",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="9" rx="1" />
+        <rect x="14" y="3" width="7" height="5" rx="1" />
+        <rect x="14" y="12" width="7" height="9" rx="1" />
+        <rect x="3" y="16" width="7" height="5" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    name: "Peta PBB",
+    path: "/pbb/peta-pbb",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+        <circle cx="12" cy="9" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    name: "Daftar WP",
+    path: "/pbb/daftar-wajib-pajak",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <line x1="10" y1="9" x2="8" y2="9" />
+      </svg>
+    ),
+  },
+  {
+    name: "Laporan",
+    path: "/pbb/laporan",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 20V10" />
+        <path d="M12 20V4" />
+        <path d="M6 20v-6" />
+      </svg>
+    ),
+  },
 ];
 
 interface Village {
@@ -104,6 +145,7 @@ export default function TopNav() {
               width={36}
               height={48}
               className="object-contain"
+              style={{ height: "auto" }}
             />
             <span className="hidden sm:block text-xs font-semibold text-gray-800 dark:text-white/90 leading-tight">
               WEB GIS BAPENDA<br />KAB. BATUBARA

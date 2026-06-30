@@ -15,25 +15,29 @@ interface BoundaryPoint {
 }
 
 interface TaxObject {
-  id: number;
+  id: string;
   nop: string;
   nama_wp: string;
-  nik: string;
   alamat: string;
   kecamatan: string;
   lat: number;
   lng: number;
   luas_tanah: number;
   luas_bangunan: number;
-  nilai_pbb: number;
+  njop_bumi: string;
+  njop_bangunan: string;
+  nilai_pbb: string;
   status: string;
+  status_label: string;
+  tahun_pajak: string;
+  jatuh_tempo: string;
   boundary: BoundaryPoint[];
 }
 
 interface MapViewProps {
   taxObjects: TaxObject[];
   onMarkerClick: (obj: TaxObject) => void;
-  highlightFeature: GeoJSON.Feature | null;
+  fitBounds: [[number, number], [number, number]] | null;
 }
 
 const mapTileSources: Record<
@@ -59,61 +63,33 @@ const mapTileSources: Record<
 };
 
 const mapLabels: Record<keyof typeof mapTileSources, string> = {
-  osm: "Peta",
-  esri: "Satelit",
+  osm: "OpenStreetMap",
+  esri: "Esri World Imagery",
   google: "Google Maps",
   "google-satellite": "Google Satelit",
 };
 
-// Hitung bounding box dari GeoJSON Feature
-function getFeatureBounds(feature: GeoJSON.Feature): [[number, number], [number, number]] | null {
-  const coords: [number, number][] = [];
-
-  function extract(geom: GeoJSON.Geometry | undefined) {
-    if (!geom) return;
-    if (geom.type === "Polygon") {
-      geom.coordinates[0].forEach((c) => coords.push([c[0], c[1]]));
-    } else if (geom.type === "MultiPolygon") {
-      geom.coordinates.forEach((poly) => {
-        poly[0].forEach((c) => coords.push([c[0], c[1]]));
-      });
-    }
-  }
-
-  extract(feature.geometry);
-  if (coords.length === 0) return null;
-
-  const lngs = coords.map((c) => c[0]);
-  const lats = coords.map((c) => c[1]);
-  return [
-    [Math.min(...lngs), Math.min(...lats)],
-    [Math.max(...lngs), Math.max(...lats)],
-  ] as [[number, number], [number, number]];
-}
-
-function MapController({ highlightFeature }: { highlightFeature: GeoJSON.Feature | null }) {
+function MapController({ fitBounds }: { fitBounds: [[number, number], [number, number]] | null }) {
   const { current: map } = useMap();
 
   useEffect(() => {
-    if (highlightFeature && map) {
-      const bounds = getFeatureBounds(highlightFeature);
-      if (bounds) {
-        map.fitBounds(bounds, { padding: 50, maxZoom: 16 });
-      }
+    if (fitBounds && map) {
+      map.fitBounds(fitBounds, { padding: 50, maxZoom: 16 });
     }
-  }, [map, highlightFeature]);
+  }, [map, fitBounds]);
 
   return null;
 }
 
-export default function MapView({ taxObjects, onMarkerClick, highlightFeature }: MapViewProps) {
+export default function MapView({ taxObjects, onMarkerClick, fitBounds }: MapViewProps) {
   const [mapType, setMapType] = useState<keyof typeof mapTileSources>("osm");
   const [hoverObj, setHoverObj] = useState<{ lng: number; lat: number; obj: TaxObject } | null>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
 
   // Konversi taxObjects ke GeoJSON FeatureCollection
   const geoJsonData = useMemo((): GeoJSON.FeatureCollection => ({
     type: "FeatureCollection",
-    features: taxObjects.map((obj) => ({
+    features: taxObjects.filter(obj => obj.boundary && obj.boundary.length > 0).map((obj) => ({
       type: "Feature" as const,
       properties: {
         id: obj.id,
@@ -126,9 +102,9 @@ export default function MapView({ taxObjects, onMarkerClick, highlightFeature }:
       },
       geometry: {
         type: "Polygon" as const,
-        coordinates: [
+        coordinates: obj.boundary && obj.boundary.length > 0 ? [
           obj.boundary.map((p) => [p.lng, p.lat]).concat([[obj.boundary[0].lng, obj.boundary[0].lat]]),
-        ],
+        ] : [],
       },
     })),
   }), [taxObjects]);
@@ -142,6 +118,7 @@ export default function MapView({ taxObjects, onMarkerClick, highlightFeature }:
           type: "raster",
           tiles: [mapTileSources[mapType].url],
           tileSize: 256,
+          maxzoom: 19,
           attribution: mapTileSources[mapType].attribution,
         },
         "tax-source": {
@@ -187,6 +164,7 @@ export default function MapView({ taxObjects, onMarkerClick, highlightFeature }:
   // Klik pada polygon
   const handleMapClick = useCallback(
     (e: MapMouseEvent) => {
+      if (!mapLoaded) return;
       try {
         const features = e.target.queryRenderedFeatures(e.point, {
           layers: ["tax-polygon-fill"],
@@ -200,12 +178,13 @@ export default function MapView({ taxObjects, onMarkerClick, highlightFeature }:
         // layer belum terpasang, abaikan
       }
     },
-    [taxObjects, onMarkerClick],
+    [taxObjects, onMarkerClick, mapLoaded],
   );
 
   // Hover → tooltip
   const handleMouseMove = useCallback(
     (e: MapMouseEvent) => {
+      if (!mapLoaded) return;
       try {
         const features = e.target.queryRenderedFeatures(e.point, {
           layers: ["tax-polygon-fill"],
@@ -225,7 +204,7 @@ export default function MapView({ taxObjects, onMarkerClick, highlightFeature }:
       setHoverObj(null);
       e.target.getCanvas().style.cursor = "";
     },
-    [taxObjects],
+    [taxObjects, mapLoaded],
   );
 
   return (
@@ -239,10 +218,12 @@ export default function MapView({ taxObjects, onMarkerClick, highlightFeature }:
         mapStyle={mapStyle}
         onClick={handleMapClick}
         onMouseMove={handleMouseMove}
+        onLoad={() => setMapLoaded(true)}
         minZoom={6}
+        maxZoom={19}
         attributionControl={false}
       >
-        <MapController highlightFeature={highlightFeature} />
+        <MapController fitBounds={fitBounds} />
         <NavigationControl position="top-right" />
 
         {hoverObj && (

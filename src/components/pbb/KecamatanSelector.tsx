@@ -1,34 +1,64 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 
-interface Village {
-  village: string;
-  village_code: string;
-  district: string;
-  district_code: string;
+interface Kecamatan {
+  kdkecamatan: string;
+  nm_kecamatan: string;
+}
+
+interface Kelurahan {
+  kdkecamatan: string;
+  kdkelurahan: string;
+  nm_kelurahan: string;
 }
 
 interface KecamatanSelectorProps {
-  geoJsonFeatures: GeoJSON.Feature[];
-  onSelectVillage: (feature: GeoJSON.Feature | null) => void;
-  selectedDistrict: string | null;
-  selectedVillage: string | null;
-  onSelectDistrict: (district: string | null) => void;
-  onSelectVillageName: (village: string | null) => void;
+  selectedDistrict: Kecamatan | null;
+  selectedVillage: Kelurahan | null;
+  onSelectDistrict: (district: Kecamatan | null) => void;
+  onSelectVillage: (village: Kelurahan | null) => void;
 }
 
 export default function KecamatanSelector({
-  geoJsonFeatures,
-  onSelectVillage,
   selectedDistrict,
   selectedVillage,
   onSelectDistrict,
-  onSelectVillageName,
+  onSelectVillage,
 }: KecamatanSelectorProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [kecamatanList, setKecamatanList] = useState<Kecamatan[]>([]);
+  const [kelurahanList, setKelurahanList] = useState<Kelurahan[]>([]);
+
+  // Fetch Kecamatan
+  useEffect(() => {
+    fetch("/api/kecamatan")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setKecamatanList(data.data);
+        }
+      })
+      .catch((err) => console.error("Failed to load kecamatan", err));
+  }, []);
+
+  // Fetch Kelurahan when District is selected
+  useEffect(() => {
+    if (selectedDistrict) {
+      fetch(`/api/kelurahan?kdkecamatan=${selectedDistrict.kdkecamatan}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setKelurahanList(data.data);
+          }
+        })
+        .catch((err) => console.error("Failed to load kelurahan", err));
+    } else {
+      setKelurahanList([]);
+    }
+  }, [selectedDistrict]);
 
   const updateScrollState = () => {
     const el = scrollRef.current;
@@ -40,7 +70,7 @@ export default function KecamatanSelector({
 
   useEffect(() => {
     updateScrollState();
-  }, []);
+  }, [kecamatanList]);
 
   const scrollBy = (direction: "left" | "right") => {
     const el = scrollRef.current;
@@ -50,63 +80,26 @@ export default function KecamatanSelector({
     }
   };
 
-  const { districts, villagesByDistrict } = useMemo(() => {
-    const districtSet = new Set<string>();
-    const map = new Map<string, Village[]>();
-
-    geoJsonFeatures.forEach((f) => {
-      const props = f.properties as Record<string, string>;
-      const district = props.district || "";
-      const village = props.village || "";
-      const district_code = props.district_code || "";
-      const village_code = props.village_code || "";
-
-      districtSet.add(district);
-
-      if (!map.has(district)) map.set(district, []);
-      const list = map.get(district)!;
-      if (!list.find((v) => v.village === village)) {
-        list.push({ district, village, district_code, village_code });
-      }
-    });
-
-    return {
-      districts: [...districtSet].sort(),
-      villagesByDistrict: map,
-    };
-  }, [geoJsonFeatures]);
-
-  const handleDistrictClick = (district: string) => {
+  const handleDistrictClick = (district: Kecamatan) => {
     onSelectDistrict(district);
-    onSelectVillageName(null);
     onSelectVillage(null);
   };
 
   const handleBackToDistricts = () => {
     onSelectDistrict(null);
-    onSelectVillageName(null);
     onSelectVillage(null);
   };
 
-  const handleVillageClick = (villageName: string) => {
-    if (selectedVillage === villageName) {
+  const handleVillageClick = (village: Kelurahan) => {
+    if (selectedVillage?.kdkelurahan === village.kdkelurahan) {
       onSelectVillage(null);
-      onSelectVillageName(null);
     } else {
-      onSelectVillageName(villageName);
-      const feature = geoJsonFeatures.find(
-        (f) => (f.properties as Record<string, string>).village === villageName
-      );
-      if (feature) onSelectVillage(feature);
+      onSelectVillage(village);
     }
   };
 
-  const selectedVillages = selectedDistrict
-    ? villagesByDistrict.get(selectedDistrict) || []
-    : [];
-
   return (
-    <div className="absolute bottom-5 z-[998] pointer-events-none" style={{ left: "160px", right: "170px" }}>
+    <div className="absolute bottom-5 z-[998] pointer-events-none" style={{ left: "160px", right: "190px" }}>
       <div className="pointer-events-auto">
         {/* Mode: Desa list (kecamatan dipilih) */}
         {selectedDistrict ? (
@@ -123,22 +116,22 @@ export default function KecamatanSelector({
                 Kembali
               </button>
               <p className="text-xs font-semibold text-gray-800 dark:text-white truncate">
-                {selectedDistrict}
+                {selectedDistrict.nm_kecamatan}
               </p>
             </div>
             {/* Chip desa/kelurahan */}
             <div className="flex flex-wrap gap-1">
-              {selectedVillages.map((v) => (
+              {kelurahanList.map((v) => (
                 <button
-                  key={v.village}
-                  onClick={() => handleVillageClick(v.village)}
+                  key={v.kdkelurahan}
+                  onClick={() => handleVillageClick(v)}
                   className={`px-2 py-0.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                    selectedVillage === v.village
+                    selectedVillage?.kdkelurahan === v.kdkelurahan
                       ? "bg-brand-100 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400 ring-1 ring-brand-500"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
                 >
-                  {v.village}
+                  {v.nm_kelurahan}
                 </button>
               ))}
             </div>
@@ -176,13 +169,13 @@ export default function KecamatanSelector({
               className="flex gap-1.5 overflow-x-auto scrollbar-hide py-1"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {districts.map((district) => (
+              {kecamatanList.map((district) => (
                 <button
-                  key={district}
+                  key={district.kdkecamatan}
                   onClick={() => handleDistrictClick(district)}
                   className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap bg-white/90 dark:bg-gray-800/90 backdrop-blur text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 shadow-sm"
                 >
-                  {district}
+                  {district.nm_kecamatan}
                 </button>
               ))}
             </div>
